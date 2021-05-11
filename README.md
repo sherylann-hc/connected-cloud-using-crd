@@ -1,5 +1,5 @@
 # Multi-cloud-connected
-A terraform module to create a basic MariaDB SQL service and the Transit APP that is configured to use Dynamic Secrets and Transit Encryption using Vault. To conect these service Consul is configuread as a service registory.
+A terraform module to create a basic MYSQL service and our own custom built Transit Application that is configured to use Dynamic Secrets and Transit Encryption using Vault. To conect these service Consul is configuread as a service registory.
 
 ## Usage
 If you clone the repo and run an apply without changing anything a random pet name will be created with the TFE prefix and used in each cluster
@@ -51,11 +51,11 @@ Before you run this you will need to:
 
 8.Run terraform init
 
-9.Run ./mesh_deploy.sh
+9.Run ./app_deploy.sh
 
 10.Run ./app_migrate.sh
 
-11.Run ./cleanup.sh
+11.Run ./cleanup.sh ###This kills all resources and removes specifc confgiuration files used to setup the enviroment.
 
 
 ## Inputs
@@ -113,7 +113,7 @@ The Terraform will locally install the user creds into your kubectl config file 
 
 Run the below script to deploy the stack decribe beow in GKE and a full consul mesh with EKS and AKS.
 
-./1.mesh_deploy.sh
+./1.app_deploy.sh
 
 
 ### What you get!
@@ -122,6 +122,8 @@ A connect cloud that has a primary deploymnet in GCP if you then want to migrate
 ### Consul
 
 You can connect to the consul UI and see the services registerd using http://<EXTERNAL-IP>
+  
+ You will need to login in using the BOOT TOKEN from the bootstrap_token.txt file located in app_stack/app_<cloud>/consul-mesh/ to authenticate 
 
 it should look like this:
 
