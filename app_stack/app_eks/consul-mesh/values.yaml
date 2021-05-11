@@ -1,0 +1,85 @@
+global:
+  name: consul
+  datacenter: dc-aws
+  tls:
+    enabled: true
+# Values that configure the Consul UI.
+
+    # Here we're using the shared certificate authority from the primary
+    # datacenter that was exported via the federation secret.
+    caCert:
+      secretName: consul-federation
+      secretKey: caCert
+    caKey:
+      secretName: consul-federation
+      secretKey: caKey
+
+  acls:
+    manageSystemACLs: true
+
+    # Here we're importing the replication token that was
+    # exported from the primary via the federation secret.
+    replicationToken:
+      secretName: consul-federation
+      secretKey: replicationToken
+
+  federation:
+    enabled: true
+  gossipEncryption:
+    secretName: consul-federation
+    secretKey: gossipEncryptionKey
+
+connectInject:
+  # Consul Connect service mesh must be enabled for federation.
+  enabled: true
+ # If true, the injector will inject the
+  # Connect sidecar into all pods by default. Otherwise, pods must specify the
+  # injection annotation (https://consul.io/docs/k8s/connect#consul-hashicorp-com-connect-inject)
+  # to opt-in to Connect injection. If this is true, pods can use the same annotation
+  # to explicitly opt-out of injection.
+  default: false
+
+  # Configures Transparent Proxy for Consul Service mesh services.
+  # Using this feature requires Consul 1.10.0-beta1+ and consul-k8s 0.26.0-beta1+.
+  transparentProxy:
+    # If true, then all Consul Service mesh will run with transparent proxy enabled by default,
+    # i.e. we enforce that all traffic within the pod will go through the proxy.
+    # This value is overridable via the "consul.hashicorp.com/transparent-proxy" pod annotation.
+    defaultEnabled: false
+    
+controller:
+  enabled: true
+meshGateway:
+  enabled: true
+server:
+  # Here we're including the server config exported from the primary
+  # via the federation secret. This config includes the addresses of
+  # the primary datacenter's mesh gateways so Consul can begin federation.
+  extraVolumes:
+    - type: secret
+      name: consul-federation
+      items:
+        - key: serverConfigJSON
+          path: config.json
+      load: true
+
+dns:
+  enabled: true
+  
+ui:
+  # If true, the UI will be enabled. This will
+  # only _enable_ the UI, it doesn't automatically register any service for external
+  # access. The UI will only be enabled on server agents. If `server.enabled` is
+  # false, then this setting has no effect. To expose the UI in some way, you must
+  # configure `ui.service`.
+  # @default: global.enabled
+  # @type: boolean
+  enabled: true
+
+  # Configure the service for the Consul UI.
+  service:
+    # This will enable/disable registering a
+    # Kubernetes Service for the Consul UI. This value only takes effect if `ui.enabled` is
+    # true and taking effect.
+    enabled: true
+    type: LoadBalancer

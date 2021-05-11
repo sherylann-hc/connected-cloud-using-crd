@@ -1,0 +1,119 @@
+global:
+  name: consul
+  datacenter: Azure
+  image: "hashicorp/consul:1.10.0-beta1"
+  # TLS configures whether Consul components use TLS.
+  tls:
+    # TLS must be enabled for federation in Kubernetes.
+    enabled: true
+
+  federation:
+    enabled: true
+    # This will cause a Kubernetes secret to be created that
+    # can be imported by secondary datacenters to configure them
+    # for federation.
+    createFederationSecret: true
+
+  acls:
+    manageSystemACLs: true
+    # If ACLs are enabled, we must create a token for secondary
+    # datacenters to replicate ACLs.
+
+    createReplicationToken: true
+
+  # Gossip encryption secures the protocol Consul uses to quickly
+  # discover new nodes and detect failure.
+  gossipEncryption:
+    secretName: consul-gossip-encryption-key
+    secretKey: key
+
+connectInject:
+  # Consul Connect service mesh must be enabled for federation.
+  enabled: true
+ # If true, the injector will inject the
+  # Connect sidecar into all pods by default. Otherwise, pods must specify the
+  # injection annotation (https://consul.io/docs/k8s/connect#consul-hashicorp-com-connect-inject)
+  # to opt-in to Connect injection. If this is true, pods can use the same annotation
+  # to explicitly opt-out of injection.
+  default: true
+
+  # Configures Transparent Proxy for Consul Service mesh services.
+  # Using this feature requires Consul 1.10.0-beta1+ and consul-k8s 0.26.0-beta1+.
+  transparentProxy:
+    # If true, then all Consul Service mesh will run with transparent proxy enabled by default,
+    # i.e. we enforce that all traffic within the pod will go through the proxy.
+    # This value is overridable via the "consul.hashicorp.com/transparent-proxy" pod annotation.
+    defaultEnabled: true
+
+  metrics:
+      defaultEnableMerging: true
+
+controller:
+  enabled: true
+
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+
+meshGateway:
+  # Mesh gateways are gateways between datacenters. They must be enabled
+  # for federation in Kubernetes since the communication between datacenters
+  # goes through the mesh gateways.
+  enabled: true
+
+ui:
+  service:
+    
+# Values that configure the Consul UI.
+ui:
+  # If true, the UI will be enabled. This will
+  # only _enable_ the UI, it doesn't automatically register any service for external
+  # access. The UI will only be enabled on server agents. If `server.enabled` is
+  # false, then this setting has no effect. To expose the UI in some way, you must
+  # configure `ui.service`.
+  # @default: global.enabled
+  # @type: boolean
+  enabled: true
+
+  # Configure the service for the Consul UI.
+  service:
+    # This will enable/disable registering a
+    # Kubernetes Service for the Consul UI. This value only takes effect if `ui.enabled` is
+    # true and taking effect.
+    enabled: true
+    type: LoadBalancer
+  
+  # Configurations for displaying metrics in the UI.
+  metrics:
+    # Enable displaying metrics in the UI. The default value of "-"
+    # will inherit from `global.metrics.enabled` value.
+    # @type: boolean
+    # @default: global.metrics.enabled
+    enabled: "true"
+    # Provider for metrics. See
+    # https://www.consul.io/docs/agent/options#ui_config_metrics_provider
+    # This value is only used if `ui.enabled` is set to true.
+    # @type: string
+    provider: "prometheus"
+
+    # baseURL is the URL of the prometheus server, usually the service URL.
+    # This value is only used if `ui.enabled` is set to true.
+    # @type: string
+    baseURL: http://prometheus-server
+
+dns:
+  # @type: boolean
+  enabled: true
+
+  # Used to control the type of service created. For
+  # example, setting this to "LoadBalancer" will create an external load
+  # balancer (for supported K8S installations)
+  type: ClusterIP
+
+  # Set a predefined cluster IP for the DNS service.
+  # Useful if you need to reference the DNS service's IP
+  # address in CoreDNS config.
+  # @type: string
+  clusterIP: 10.0.255.254
